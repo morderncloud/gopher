@@ -2,6 +2,12 @@ package main
 
 import "fmt"
 
+const (
+	info       = "Generating Fabonacci numbers: "
+	verClosure = "Closure version"
+	verChannel = "Channel version"
+)
+
 // FabClosure closure version
 func FabClosure() func() int {
 	pre, cur := 0, 1
@@ -13,21 +19,32 @@ func FabClosure() func() int {
 }
 
 // FabChannel channel version
-func FabChannel() {
-
+func FabChannel(ch chan int) {
+	cl := cap(ch)
+	pre, cur := 0, 1
+	for i := 0; i < cl; i++ {
+		pre, cur = cur, pre+cur
+		ch <- pre
+	}
+	close(ch)
 }
 
 // main entrance:
 // go build -o ~/gopher/bin/fabonacci  fabonacci.go
 // ~/gopher/bin/fabonacci
 func main() {
-	fmt.Println("Generating Fabonacci numbers: ")
+	fmt.Println(info)
 
-	/*
-		fab := FabClosure()
-		for i := 0; i < 10; i++ {
-			fmt.Println(fab())
-		}
-	*/
+	// Closure version
+	fab := FabClosure()
+	for i := 0; i < 10; i++ {
+		fmt.Println(verClosure, fab())
+	}
 
+	// Channel version
+	ch := make(chan int, 10)
+	go FabChannel(ch)
+	for i := range ch {
+		fmt.Println(verChannel, i)
+	}
 }
